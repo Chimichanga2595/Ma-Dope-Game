@@ -21,7 +21,9 @@ var sprites = {
     rightJump: new sprite(30, 0, 30, 38),
     brick: new sprite(60, 0, 64, 64),
     coin: new sprite(60, 64, 20, 20),
-	jet: new sprite(80, 64, 15, 15)
+	jet: new sprite(80, 64, 15, 15),
+	enemy: new sprite (124, 0, 42, 64),
+	enemy2: new sprite (166, 0, 42, 64)
 };
 var facingRight = true;
 var platforms = [];
@@ -46,7 +48,7 @@ var EDGE_CREEP = 7;
 var SCORE_DIGITS = 8;
 var JET_DECAY = 50;
 var JET_RECOVER = 50;
-var ENEMY_VELOCITY = 150;
+var ENEMY_VELOCITY = 72;
 
 function init() {
     spritesheet.src = 'hatguy.png';
@@ -67,17 +69,17 @@ function init() {
 	
 	jet = new entity(-100, -100, 15, 15)
 	
-	enemy = new entity(0, 0, 30, 30)
-	enemy.vx = ENEMY_VELOCITY;
-	enemyPlat = pick(platforms);
-	enemy.setBottom(enemyPlat.getTop());
-	enemy.setMidX(enemyPlat.getMidX());
+	enemy = new entity (0, 0, 42, 64);
+	
+	moveEnemy();
 
     target = new entity(0, 0, 20, 20);
     moveTarget();
 
     player = new entity(0, 0, 30, 38);
     reset();
+	
+
 
     document.addEventListener('keydown', keyDown, false);
     document.addEventListener('keyup', keyUp, false);
@@ -105,9 +107,21 @@ function moveTarget() {
     var platform = pick(platforms);
     target.setMidX(platform.getMidX());
     target.setMidY(platform.getTop() - platform.halfHeight);
+	
 }
 
-function gameLoop() {
+function moveEnemy() {
+	score += 40;
+	if(score > highScore) {
+		highScore = score
+		localStorage.setItem('high', highScore);
+	}
+	enemy.vx = ENEMY_VELOCITY;
+	enemyPlat = pick(platforms);
+	enemy.setBottom(enemyPlat.getTop());
+	enemy.setMidX(enemyPlat.getMidX());
+}
+	function gameLoop() {
     updatePosition();
     handleCollision();
     updateCanvas();
@@ -207,6 +221,7 @@ function handleCollision() {
     sliding = false;
 	
 	if(collideRect(player, enemy)) reset();
+	if(collideRect(jet, enemy)) moveEnemy();
 
     var platform, dx, dy;
     for(var p=0; p<platforms.length; p++) {
@@ -313,9 +328,10 @@ function updateCanvas() {
 
     drawSprite(sprite, player);
 	
-	ctx.fillStyle='red';
-	ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-
+	if(enemy.vx > 0)
+		drawSprite(sprites.enemy2, enemy);
+	else
+		drawSprite(sprites.enemy, enemy);
     var platform;
     for(var p=0; p<platforms.length; p++) {
         platform = platforms[p];
